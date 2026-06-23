@@ -9,6 +9,13 @@ import argparse
 import os
 
 try:
+    import yaml
+except ImportError:
+    yaml = None
+
+DEFAULT_ISP_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "isp_config.yaml")
+
+try:
     import cupy as cp
     import cupyx.scipy.ndimage as cp_ndimage
     # Test if GPU is actually available
@@ -25,6 +32,27 @@ except ImportError:
     print("To install CuPy:")
     print("  1. Install CUDA Toolkit: https://developer.nvidia.com/cuda-downloads")
     print("  2. pip install cupy-cuda11x (replace 11x with your CUDA version)")
+
+def load_isp_config(config_path: str):
+    if yaml is None:
+        raise ImportError("PyYAML is required to load ISP config files. Install it with `pip install PyYAML`.")
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"ISP config file not found: {config_path}")
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+    if not isinstance(config, dict):
+        raise ValueError(f"ISP config must be a YAML mapping: {config_path}")
+    return config
+
+def parse_output_dtype(dtype_name: str):
+    dtype_map = {
+        "uint8": np.uint8,
+        "uint16": np.uint16,
+    }
+    try:
+        return dtype_map[dtype_name]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported output dtype: {dtype_name}. Use one of {list(dtype_map)}") from exc
 
 def print_directory_tree(directory, prefix="", max_depth=None, current_depth=0):
     if max_depth is not None and current_depth > max_depth:
@@ -238,10 +266,10 @@ def isp_pipeline_gpu(
             sigma_ratio=sigma_ratio,
             center_radius_ratio=center_radius_ratio,
             gain_clip=gain_clip,
-            raw_denoise=False,
-            bilateral_sigma_color=0,
-            bilateral_sigma_space=0,
-            bilateral_iterations=1,
+            raw_denoise=raw_denoise,
+            bilateral_sigma_color=bilateral_sigma_color,
+            bilateral_sigma_space=bilateral_sigma_space,
+            bilateral_iterations=bilateral_iterations,
             white_balance_temp=white_balance_temp,
             ccm=ccm,
             white_level=white_level,
@@ -342,55 +370,56 @@ def isp_pipeline_gpu(
     
     return bgr_out, {"black_levels": black_levels, "gain_map": cp.asnumpy(gain_map_gpu) if gain_map is None else gain_map}
 
-def run_isp_on_path_gpu(input_path, pattern='GBRG', 
-                        enhance_shadow=False,
-                        shadow_gamma=1.5,
-                        shadow_white_level=40000.0,
-                        apply_clahe=False):
+def run_isp_on_path_gpu(input_path, config):
     """GPU-accelerated ISP processing
     
     Args:
-        enhance_shadow: If True, use adjusted gamma and white_level to enhance shadow contrast
-        shadow_gamma: Gamma value for shadow enhancement (lower = darker shadows, more contrast)
-        shadow_white_level: White level for shadow enhancement (lower = more contrast, brighter midtones)
-        apply_clahe: If True, apply CLAHE (Contrast Limited Adaptive Histogram Equalization) post-processing
+        config: ISP configuration loaded from YAML.
     """
     if not os.path.exists(input_path):
         print(f"Input path does not exist: {input_path}")
         return None, None
     
     raw_img = np.load(input_path)
-    
-    # Adjust parameters based on shadow enhancement mode
-    if enhance_shadow:
-        gamma_val = shadow_gamma
-        white_level_val = shadow_white_level
+
+    raw_config = config["raw"]
+    lsc_config = config["lens_shading_correction"]
+    denoise_config = config["raw_denoise"]
+    wb_config = config["white_balance"]
+    tone_config = config["tone_mapping"]
+    shadow_config = config["shadow_enhancement"]
+    clahe_config = config["clahe"]
+
+    if shadow_config["enabled"]:
+        gamma_val = shadow_config["gamma"]
+        white_level_val = shadow_config["white_level"]
     else:
-        gamma_val = 2.4
-        white_level_val = 65535.0
+        gamma_val = tone_config["gamma"]
+        white_level_val = tone_config["white_level"]
     
     img_srgb8_ori, meta_ori = isp_pipeline_gpu(
-        raw_img, pattern='GBRG',
-        black_levels=None,
-        gain_map=None,             
-        center_radius_ratio=0.12, #0.12, 
-        lsc_strength=1.28, #1.642,          
-        sigma_ratio=0.25,
-        gain_clip=4.0, #8.0,
-        raw_denoise=True,
-        bilateral_sigma_color=200, #200.0,
-        bilateral_sigma_space=8.0, #8.0,
-        bilateral_iterations=1,
-        bilateral_use_gpu=True,  # Use GPU for bilateral filtering
-        white_balance_temp=5200, #4600, 
-        ccm=None,              
+        raw_img,
+        pattern=raw_config["bayer_pattern"],
+        black_levels=lsc_config["black_levels"],
+        gain_map=lsc_config["gain_map"],
+        center_radius_ratio=lsc_config["center_radius_ratio"],
+        lsc_strength=lsc_config["strength"],
+        sigma_ratio=lsc_config["sigma_ratio"],
+        gain_clip=lsc_config["gain_clip"],
+        raw_denoise=denoise_config["enabled"],
+        bilateral_sigma_color=denoise_config["bilateral_sigma_color"],
+        bilateral_sigma_space=denoise_config["bilateral_sigma_space"],
+        bilateral_iterations=denoise_config["bilateral_iterations"],
+        bilateral_use_gpu=denoise_config["bilateral_use_gpu"],
+        white_balance_temp=wb_config["temperature"],
+        ccm=wb_config["ccm"],
         white_level=white_level_val,
         gamma=gamma_val,
-        out_dtype=np.uint16
+        out_dtype=parse_output_dtype(tone_config["out_dtype"]),
     )
     
     # Optional: Apply CLAHE for additional local contrast enhancement
-    if apply_clahe and img_srgb8_ori is not None:
+    if clahe_config["enabled"] and img_srgb8_ori is not None:
         # For uint16, convert to uint8 first (LAB conversion doesn't support uint16)
         if img_srgb8_ori.dtype == np.uint16:
             # Convert uint16 to uint8 for processing
@@ -401,7 +430,10 @@ def run_isp_on_path_gpu(input_path, pattern='GBRG',
             l, a, b = cv2.split(img_lab)
             
             # Apply CLAHE on L channel
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            clahe = cv2.createCLAHE(
+                clipLimit=clahe_config["clip_limit"],
+                tileGridSize=tuple(clahe_config["tile_grid_size"]),
+            )
             l_enhanced = clahe.apply(l)
             
             # Merge back and convert to BGR
@@ -415,14 +447,17 @@ def run_isp_on_path_gpu(input_path, pattern='GBRG',
             img_lab = cv2.cvtColor(img_srgb8_ori, cv2.COLOR_BGR2LAB)
             l, a, b = cv2.split(img_lab)
             
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            clahe = cv2.createCLAHE(
+                clipLimit=clahe_config["clip_limit"],
+                tileGridSize=tuple(clahe_config["tile_grid_size"]),
+            )
             l_enhanced = clahe.apply(l)
             
             img_srgb8_ori = cv2.cvtColor(cv2.merge([l_enhanced, a, b]), cv2.COLOR_LAB2BGR)
     
     return img_srgb8_ori, meta_ori
 
-def batch_isp_gpu(root_dataset, start_id: int, end_id: int):
+def batch_isp_gpu(root_dataset, start_id: int, end_id: int, config):
     """
     GPU-accelerated batch ISP processing
     
@@ -430,6 +465,7 @@ def batch_isp_gpu(root_dataset, start_id: int, end_id: int):
         root_dataset: Root directory of the dataset
         start_id: Start episode ID
         end_id: End episode ID (exclusive)
+        config: ISP configuration loaded from YAML.
     """
     episode_dir = os.path.join(root_dataset, 'episodes')
     if not os.path.exists(episode_dir):
@@ -480,7 +516,7 @@ def batch_isp_gpu(root_dataset, start_id: int, end_id: int):
 
             try:
                 start_time = time.time()
-                srgb_img, _ = run_isp_on_path_gpu(src_path, apply_clahe=False, enhance_shadow=False)
+                srgb_img, _ = run_isp_on_path_gpu(src_path, config=config)
                 if srgb_img is not None:
                     cv2.imwrite(dst_path, srgb_img)
                     elapsed = time.time() - start_time
@@ -503,8 +539,12 @@ if __name__ == "__main__":
                        help='Start episode ID')
     parser.add_argument('--end_id', type=int, required=True,
                        help='End episode ID (exclusive)')
+    parser.add_argument('--config', type=str, default=DEFAULT_ISP_CONFIG_PATH,
+                       help='Path to ISP YAML config file')
     args = parser.parse_args()
+    config = load_isp_config(args.config)
     
     batch_isp_gpu(root_dataset=args.root_dataset, 
                   start_id=args.start_id, 
-                  end_id=args.end_id)
+                  end_id=args.end_id,
+                  config=config)

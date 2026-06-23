@@ -8,3 +8,4 @@ matplotlib==3.10.6
 ultralytics==8.3.145
 scipy==1.15.3
 cupy-cuda11x==11.0.0 # for GPU acceleration
+PyYAML==6.0.2

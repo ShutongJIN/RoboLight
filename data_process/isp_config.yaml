@@ -1,0 +1,38 @@
+# Default ISP configuration for batch RAW-to-PNG conversion.
+
+raw:
+  bayer_pattern: GBRG
+
+lens_shading_correction:
+  strength: 1.28
+  sigma_ratio: 0.25
+  center_radius_ratio: 0.12
+  gain_clip: 4.0
+  black_levels: null
+  gain_map: null
+
+raw_denoise:
+  enabled: true
+  bilateral_sigma_color: 200.0
+  bilateral_sigma_space: 8.0
+  bilateral_iterations: 1
+  bilateral_use_gpu: true
+
+white_balance:
+  temperature: 5200
+  ccm: null
+
+tone_mapping:
+  white_level: 65535.0
+  gamma: 2.4
+  out_dtype: uint16
+
+shadow_enhancement:
+  enabled: false
+  gamma: 1.5
+  white_level: 40000.0
+
+clahe:
+  enabled: false
+  clip_limit: 2.0
+  tile_grid_size: [8, 8]

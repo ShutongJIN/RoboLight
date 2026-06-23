@@ -9,6 +9,7 @@ This repository is a toolkit for preparing RoboLight datasets for policy trainin
 
 - `data_process/dataset_interpolation.py` - Batch dataset synthesis by interpolating aligned trajectories and RAW images in each dataset.
 - `data_process/batch_isp.py` - Batch RAW-to-PNG conversion with an ISP pipeline. It uses GPU acceleration through CuPy when available and falls back to CPU processing otherwise.
+- `data_process/isp_config.yaml` - ISP configuration for RAW-to-PNG conversion.
 - `data_process/isp_on_raw_img.py` - Core ISP utilities for RAW image processing.
 
 ## Installation
@@ -84,7 +85,17 @@ The input datasets must share the same episode IDs, image names, and trajectory 
 python data_process/batch_isp.py \
     --root_dataset /path/to/data_root \
     --start_id 0 \
+    --end_id 200
+```
+
+By default, the script uses `data_process/isp_config.yaml`. To run with a custom ISP configuration:
+
+```bash
+python data_process/batch_isp.py \
+    --root_dataset /path/to/data_root \
+    --start_id 0 \
     --end_id 200 \
+    --config /path/to/custom_isp_config.yaml
 ```
 
 For each episode, the script reads:
@@ -105,6 +116,6 @@ Existing `.png` outputs are skipped, so the script can be resumed from an interr
 
 - `start_id` is inclusive and `end_id` is exclusive.
 - Keep dataset folders aligned before synthesis; missing episodes, mismatched image names, or different trajectory lengths will cause warnings or errors.
-- The default ISP settings are defined in `data_process/batch_isp.py` and `data_process/isp_on_raw_img.py`.
+- The default ISP configurations used are  in `data_process/isp_config.yaml`.
 
 
