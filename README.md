@@ -78,14 +78,13 @@ The input datasets must share the same episode IDs, image names, and trajectory 
 
 ## 2. Batch RAW to PNG conversion
 
-`batch_isp.py` converts all RAW `.npy` images in `rgb_0/` into `.png` images that is suitable for policy training. The output is written to `rgb_0_isped/` inside each episode.
+`batch_isp.py` converts RAW `.npy` images in the selected episode range into `.png` images suitable for policy training. The output is written to `rgb_0_isped/` inside each episode.
 
 ```bash
 python data_process/batch_isp.py \
     --root_dataset /path/to/data_root \
     --start_id 0 \
     --end_id 200 \
-    --batch_size 1
 ```
 
 For each episode, the script reads:

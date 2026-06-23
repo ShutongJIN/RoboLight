@@ -1,7 +1,6 @@
 
-from isp_on_raw16 import *
-# Explicitly import private constants that are not included in *
-from isp_on_raw16 import _BAYER_INDEX, _BAYER2CV
+from isp_on_raw_img import *
+from isp_on_raw_img import _BAYER_INDEX
 import time
 import cv2
 import tqdm
@@ -423,7 +422,7 @@ def run_isp_on_path_gpu(input_path, pattern='GBRG',
     
     return img_srgb8_ori, meta_ori
 
-def batch_isp_gpu(root_dataset, start_id: int, end_id: int, batch_size: int = 1):
+def batch_isp_gpu(root_dataset, start_id: int, end_id: int):
     """
     GPU-accelerated batch ISP processing
     
@@ -431,7 +430,6 @@ def batch_isp_gpu(root_dataset, start_id: int, end_id: int, batch_size: int = 1)
         root_dataset: Root directory of the dataset
         start_id: Start episode ID
         end_id: End episode ID (exclusive)
-        batch_size: Number of images to process in parallel (currently only supports 1)
     """
     episode_dir = os.path.join(root_dataset, 'episodes')
     if not os.path.exists(episode_dir):
@@ -505,11 +503,8 @@ if __name__ == "__main__":
                        help='Start episode ID')
     parser.add_argument('--end_id', type=int, required=True,
                        help='End episode ID (exclusive)')
-    parser.add_argument('--batch_size', type=int, default=1,
-                       help='Batch size for processing (default: 1)')
     args = parser.parse_args()
     
     batch_isp_gpu(root_dataset=args.root_dataset, 
                   start_id=args.start_id, 
-                  end_id=args.end_id,
-                  batch_size=args.batch_size)
+                  end_id=args.end_id)
