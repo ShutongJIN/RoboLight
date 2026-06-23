@@ -1,0 +1,10 @@
+opencv-python==4.9.0.80
+pandas==2.1.1
+pyrealsense2==2.55.1.6486
+tqdm==4.66.2
+numpy==1.24.4
+
+matplotlib==3.10.6
+ultralytics==8.3.145
+scipy==1.15.3
+cupy-cuda11x==11.0.0 # for GPU acceleration
