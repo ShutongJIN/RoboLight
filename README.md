@@ -6,9 +6,9 @@ This repository is a toolkit for preparing RoboLight datasets for policy trainin
 2. Interpolating between aligned datasets to generate new synthesized datasets.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/f5d299ec-9241-47bb-a875-5b683ace2fa8" alt="RoboLight demo 1" width="32%">
-  <img src="https://github.com/user-attachments/assets/6917645d-b2d2-4f67-8a90-fa6819347293" alt="RoboLight demo 2" width="32%">
-  <img src="https://github.com/user-attachments/assets/2664cb42-5c4c-4fbd-bf31-d5427a8a299c" alt="RoboLight demo 3" width="32%">
+  <img src="https://github.com/user-attachments/assets/6917645d-b2d2-4f67-8a90-fa6819347293" alt="rgb stacking" width="32%">
+  <img src="https://github.com/user-attachments/assets/f5d299ec-9241-47bb-a875-5b683ace2fa8" alt="donut hanging" width="32%">
+  <img src="https://github.com/user-attachments/assets/2664cb42-5c4c-4fbd-bf31-d5427a8a299c" alt="sparkling sorting" width="32%">
 </p>
 
 <p align="center">
