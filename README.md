@@ -5,6 +5,24 @@ This repository is a toolkit for preparing RoboLight datasets for policy trainin
 1. Interpolating between aligned datasets to generate new synthesized datasets.
 2. Converting dataset images from HDR RAW space into RGB images suitable for policy training.
 
+## Demo
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f5d299ec-9241-47bb-a875-5b683ace2fa8" alt="RoboLight demo 1" width="800">
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6917645d-b2d2-4f67-8a90-fa6819347293" alt="RoboLight demo 2" width="800">
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2664cb42-5c4c-4fbd-bf31-d5427a8a299c" alt="RoboLight demo 3" width="800">
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/4ce8a9f2-b921-4ec2-8dba-cb2b669ac65f" alt="RoboLight overview" width="800">
+</p>
+
 ## Project Structure
 
 - `data_process/dataset_interpolation.py` - Batch dataset synthesis by interpolating aligned trajectories and RAW images in each dataset.
