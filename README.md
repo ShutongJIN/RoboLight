@@ -1,5 +1,17 @@
 # RoboLight
 
+<p align="center">
+  <a href="https://arxiv.org/abs/2603.04249">
+    <img src="https://img.shields.io/badge/Paper-PDF-blue" alt="Paper">
+  </a>
+  <a href="https://cloudgripper.eecs.kth.se:8443/dataset/robolight/">
+    <img src="https://img.shields.io/badge/Data-Dataset-green" alt="Data">
+  </a>
+  <a href="https://github.com/ShutongJIN/RoboLight/releases/download/user_manual/The_Light_Cube_System_Fabrication_Instructions.pdf">
+    <img src="https://img.shields.io/badge/Light%20Cube-Setup%20Guide-orange" alt="Light Cube Setup">
+  </a>
+</p>
+
 This repository is a toolkit for preparing RoboLight datasets for policy training. It currently focuses on two batch data-processing pipelines:
 
 1. Converting dataset images from HDR RAW space into RGB images suitable for policy training.
