@@ -1,4 +1,4 @@
-# RoboLight
+# RoboLight Dataset
 
 <p align="center">
   <a href="https://arxiv.org/abs/2603.04249">📄 Paper</a>
@@ -20,8 +20,9 @@ This repository is a toolkit for preparing RoboLight datasets for policy trainin
 </p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/4ce8a9f2-b921-4ec2-8dba-cb2b669ac65f" alt="RoboLight overview" width="800">
+  <img src="https://github.com/user-attachments/assets/566edc14-2b2e-449f-866c-f6af81e81882" alt="RoboLight overview" width="800">
 </p>
+
 
 ## Project Structure
 
