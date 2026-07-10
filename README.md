@@ -20,7 +20,7 @@ This repository is a toolkit for preparing RoboLight datasets for policy trainin
 </p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/df591913-f466-4b0b-ad88-9379675e8127" alt="RoboLight overview" width="800">
+  <img src="https://github.com/user-attachments/assets/46ccb27a-7cfb-456a-8de2-5f87f7227474" alt="RoboLight overview" width="800">
 </p>
 
 
